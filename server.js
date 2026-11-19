@@ -11,7 +11,12 @@ app.use(express.json({ limit: "1mb" }));
 
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.use("/auth", require("./app/routes/auth"));
-app.use(authenticate);
+app.use((req, res, next) => {
+  const path = req.path.replace(/\/$/, "") || "/";
+  const isPublicRead = req.method === "GET" && (path === "/meals" || path === "/plan/week");
+  if (isPublicRead) return next();
+  return authenticate(req, res, next);
+});
 app.use("/users", require("./app/routes/users"));
 app.use("/meals", require("./app/routes/meals"));
 app.use("/plan", require("./app/routes/plan"));
